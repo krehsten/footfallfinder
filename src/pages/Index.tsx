@@ -8,6 +8,12 @@ import { Separator } from '@/components/ui/separator';
 
 const Index = () => {
   const [showDashboard, setShowDashboard] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState(null);
+  
+  const handleVideoProcessed = (results: any) => {
+    setAnalysisResults(results);
+    setShowDashboard(true);
+  };
   
   return (
     <div className="min-h-screen">
@@ -25,14 +31,14 @@ const Index = () => {
             </p>
           </div>
           
-          <VideoUpload onVideoProcessed={() => setShowDashboard(true)} />
+          <VideoUpload onVideoProcessed={handleVideoProcessed} />
         </div>
       </section>
       
       {showDashboard && (
         <>
           <Separator className="max-w-3xl mx-auto" />
-          <Dashboard />
+          <Dashboard analysisData={analysisResults} />
         </>
       )}
       

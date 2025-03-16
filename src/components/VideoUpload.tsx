@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { Upload, FileVideo, RefreshCw } from 'lucide-react';
+import { analyzeVideo } from '@/utils/videoAnalysis';
 
 interface VideoUploadProps {
-  onVideoProcessed: () => void;
+  onVideoProcessed: (analysisResult: any) => void;
 }
 
 const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
@@ -15,6 +16,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -36,18 +38,43 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
     }
   }, [isDragging]);
 
-  const processVideo = useCallback(() => {
+  const processVideo = useCallback(async () => {
     setIsUploading(true);
     
-    // Simulate video processing
-    setTimeout(() => {
-      setIsUploading(false);
+    try {
+      // Make sure the video is loaded and ready
+      if (videoRef.current) {
+        // Wait for video metadata to load
+        if (videoRef.current.readyState < 2) {
+          await new Promise(resolve => {
+            videoRef.current!.onloadeddata = resolve;
+          });
+        }
+        
+        console.log("Video loaded, starting analysis...");
+        
+        // Analyze the video
+        const analysisResult = await analyzeVideo(videoRef.current);
+        console.log("Analysis complete:", analysisResult);
+        
+        toast({
+          title: "Video processed successfully",
+          description: `Detected ${analysisResult.totalVisitors} people in the video.`,
+        });
+        
+        // Pass the analysis results to the parent component
+        onVideoProcessed(analysisResult);
+      }
+    } catch (error) {
+      console.error("Error analyzing video:", error);
       toast({
-        title: "Video processed successfully",
-        description: "Your video has been analyzed. View your insights below.",
+        variant: "destructive",
+        title: "Processing failed",
+        description: "An error occurred while analyzing the video.",
       });
-      onVideoProcessed();
-    }, 3000);
+    } finally {
+      setIsUploading(false);
+    }
   }, [onVideoProcessed, toast]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -63,7 +90,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
         const reader = new FileReader();
         reader.onload = () => {
           setVideoPreview(reader.result as string);
-          processVideo();
+          // Process will be triggered by onLoadedData event on the video element
         };
         reader.readAsDataURL(file);
       } else {
@@ -74,7 +101,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
         });
       }
     }
-  }, [processVideo, toast]);
+  }, [toast]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -84,7 +111,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
         const reader = new FileReader();
         reader.onload = () => {
           setVideoPreview(reader.result as string);
-          processVideo();
+          // Process will be triggered by onLoadedData event on the video element
         };
         reader.readAsDataURL(file);
       } else {
@@ -95,7 +122,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
         });
       }
     }
-  }, [processVideo, toast]);
+  }, [toast]);
 
   const handleSelectButtonClick = useCallback(() => {
     // Programmatically click the hidden file input when the button is clicked
@@ -111,6 +138,11 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
       fileInputRef.current.value = '';
     }
   }, []);
+
+  const handleVideoLoaded = useCallback(() => {
+    console.log("Video loaded, ready for processing");
+    processVideo();
+  }, [processVideo]);
 
   return (
     <div className="w-full max-w-3xl mx-auto mb-12">
@@ -155,9 +187,11 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
         ) : (
           <div className="relative aspect-video rounded-lg overflow-hidden">
             <video 
+              ref={videoRef}
               src={videoPreview} 
               className="w-full h-full object-cover"
               controls
+              onLoadedData={handleVideoLoaded}
             />
             {isUploading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50">

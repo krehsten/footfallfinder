@@ -17,11 +17,27 @@ import {
   Cell
 } from 'recharts';
 
-const Dashboard: React.FC = () => {
-  const stats = useMemo(() => generateDashboardStats(), []);
-  const footfallData = useMemo(() => generateFootfallData(), []);
-  const timeSpentData = useMemo(() => generateTimeSpentData(), []);
-  const heatmapData = useMemo(() => generateHeatmapData(), []);
+interface DashboardProps {
+  analysisData?: any;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ analysisData }) => {
+  // Use analysis data if provided, otherwise fall back to mock data
+  const stats = useMemo(() => 
+    analysisData?.stats || generateDashboardStats(),
+  [analysisData]);
+  
+  const footfallData = useMemo(() => 
+    analysisData?.footfallData || generateFootfallData(),
+  [analysisData]);
+  
+  const timeSpentData = useMemo(() => 
+    analysisData?.timeSpentData || generateTimeSpentData(),
+  [analysisData]);
+  
+  const heatmapData = useMemo(() => 
+    analysisData?.heatmapData || generateHeatmapData(),
+  [analysisData]);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
