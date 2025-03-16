@@ -1,9 +1,9 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Upload, Video, FileVideo, AlertCircle } from 'lucide-react';
+import { Upload, FileVideo } from 'lucide-react';
 
 interface VideoUploadProps {
   onVideoProcessed: () => void;
@@ -14,6 +14,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -96,6 +97,13 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
     }
   }, [processVideo, toast]);
 
+  const handleSelectButtonClick = useCallback(() => {
+    // Programmatically click the hidden file input when the button is clicked
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }, []);
+
   return (
     <div className="w-full max-w-3xl mx-auto mb-12">
       <Card 
@@ -116,24 +124,22 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
             <p className="max-w-md mb-6 text-sm text-muted-foreground">
               Drag and drop your video file here, or click the button below to select a file for footfall analysis
             </p>
-            <label htmlFor="video-upload">
-              <div className="relative">
-                <Button className="relative overflow-hidden group">
-                  <span className="relative z-10 flex items-center gap-2">
-                    <FileVideo className="w-4 h-4" />
-                    Select Video
-                  </span>
-                  <span className="absolute inset-0 w-full h-full bg-background opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
-                </Button>
-                <input 
-                  id="video-upload" 
-                  type="file" 
-                  accept="video/*" 
-                  className="hidden" 
-                  onChange={handleFileSelect}
-                />
-              </div>
-            </label>
+            <div className="relative">
+              <Button className="relative overflow-hidden group" onClick={handleSelectButtonClick}>
+                <span className="relative z-10 flex items-center gap-2">
+                  <FileVideo className="w-4 h-4" />
+                  Select Video
+                </span>
+                <span className="absolute inset-0 w-full h-full bg-background opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+              </Button>
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                accept="video/*" 
+                className="hidden" 
+                onChange={handleFileSelect}
+              />
+            </div>
             <p className="mt-4 text-xs text-muted-foreground">
               Supported formats: MP4, MOV, AVI (max 100MB)
             </p>
