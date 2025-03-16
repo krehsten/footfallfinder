@@ -3,7 +3,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Upload, FileVideo } from 'lucide-react';
+import { Upload, FileVideo, RefreshCw } from 'lucide-react';
 
 interface VideoUploadProps {
   onVideoProcessed: () => void;
@@ -104,6 +104,14 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
     }
   }, []);
 
+  const handleReuploadButtonClick = useCallback(() => {
+    // Reset the video preview and allow the user to select a new video
+    setVideoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
+
   return (
     <div className="w-full max-w-3xl mx-auto mb-12">
       <Card 
@@ -156,6 +164,19 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
                 <span className="loader mb-4"></span>
                 <p className="text-white font-medium">Analyzing video...</p>
                 <p className="text-white/70 text-sm mt-2">This may take a moment</p>
+              </div>
+            )}
+            {!isUploading && (
+              <div className="absolute top-4 right-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-white/80 backdrop-blur-sm hover:bg-white" 
+                  onClick={handleReuploadButtonClick}
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Reupload
+                </Button>
               </div>
             )}
           </div>
