@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,6 +13,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -54,7 +54,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
         console.log("Video loaded, starting analysis...");
         
         // Analyze the video
-        const analysisResult = await analyzeVideo(videoRef.current);
+        const analysisResult = await analyzeVideo(videoRef.current, fileName || undefined);
         console.log("Analysis complete:", analysisResult);
         
         toast({
@@ -75,7 +75,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
     } finally {
       setIsUploading(false);
     }
-  }, [onVideoProcessed, toast]);
+  }, [onVideoProcessed, toast, fileName]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -87,6 +87,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
       const file = files[0];
       const fileType = file.type;
       if (fileType.includes('video/')) {
+        setFileName(file.name);
         const reader = new FileReader();
         reader.onload = () => {
           setVideoPreview(reader.result as string);
@@ -108,6 +109,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoProcessed }) => {
     if (files && files.length > 0) {
       const file = files[0];
       if (file.type.includes('video/')) {
+        setFileName(file.name);
         const reader = new FileReader();
         reader.onload = () => {
           setVideoPreview(reader.result as string);
